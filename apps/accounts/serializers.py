@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.db import transaction
 
+from services.wallets.repository import WalletRepository
 from .models import Transaction
 
 User = get_user_model()
@@ -43,8 +44,14 @@ class TransactionSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         instance = super().create(validated_data)
 
-        instance.sender.balance -= instance.amount
-        instance.recipient.balance += instance.amount
+        wallets = WalletRepository.get_wallets(instance.wallet)
+
+        sender_wallet = getattr(wallets, instance.sender.wallet) * instance.amount
+
+        recipient_wallet = getattr(wallets, instance.recipient.wallet) * instance.amount
+
+        instance.sender.balance -= sender_wallet
+        instance.recipient.balance += recipient_wallet
 
         instance.sender.save()
         instance.recipient.save()
@@ -53,5 +60,8 @@ class TransactionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Transaction
-        fields = ('sender', 'recipient', 'amount')
-        extra_kwargs = {'amount': {'required': True}}
+        fields = ('sender', 'recipient', 'amount', 'wallet')
+        extra_kwargs = {
+            'amount': {'required': True},
+            'wallet': {'required': True}
+        }

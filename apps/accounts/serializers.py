@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from rest_framework.serializers import raise_errors_on_nested_writes
 
 from services.wallets.repository import WalletRepository
 from .models import Transaction
@@ -40,9 +41,10 @@ class TransactionSerializer(serializers.ModelSerializer):
 
         return attrs
 
-    @transaction.atomic
     def create(self, validated_data):
-        instance = super().create(validated_data)
+        raise_errors_on_nested_writes('create', self, validated_data)
+
+        instance = self.Meta.model(**validated_data)
 
         wallets = WalletRepository.get_wallets(instance.wallet)
 
@@ -53,8 +55,10 @@ class TransactionSerializer(serializers.ModelSerializer):
         instance.sender.balance -= sender_wallet
         instance.recipient.balance += recipient_wallet
 
-        instance.sender.save()
-        instance.recipient.save()
+        with transaction.atomic():
+            instance.sender.save()
+            instance.recipient.save()
+            instance.save()
 
         return instance
 

@@ -27,7 +27,7 @@ class User(AbstractUser):
     wallet = models.CharField('Валюта', max_length=3, choices=Wallet.CHOICES, default=Wallet.USD)
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = []
+    REQUIRED_FIELDS = ['username']
 
     def save(self, *args, **kwargs):
         self.username = self.email

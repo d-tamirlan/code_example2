@@ -12,7 +12,7 @@ services:
     container_name: web
     restart: always
     build: .
-    command: /bin/bash -c "pip install -r requirements.txt; python manage.py runserver 0.0.0.0:8000"
+    command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/src
     ports:

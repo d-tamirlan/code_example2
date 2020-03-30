@@ -1,7 +1,10 @@
 FROM python:3.7
 ENV PYTHONUNBUFFERED 1
-RUN mkdir /src
-WORKDIR /src
+RUN mkdir /project
+WORKDIR /project
 
-COPY . /src/
+COPY requirements.txt /project/
+
 RUN pip install -r requirements.txt
+
+COPY . /project/
